@@ -5,6 +5,7 @@ import com.github.niefy.common.utils.PageUtils;
 import com.github.niefy.modules.wx.entity.WxAccount;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,6 +21,8 @@ public interface WxAccountService extends IService<WxAccount> {
      * @return PageUtils 分页结果
      */
     PageUtils queryPage(Map<String, Object> params);
+
+    List<WxAccount> queryRoleAccount(Long userId);
 
     @Override
     boolean save(WxAccount entity);

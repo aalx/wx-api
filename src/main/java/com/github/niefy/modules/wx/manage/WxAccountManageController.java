@@ -1,6 +1,9 @@
 package com.github.niefy.modules.wx.manage;
 
+import com.github.niefy.common.utils.Constant;
 import com.github.niefy.common.utils.R;
+import com.github.niefy.modules.sys.controller.AbstractController;
+import com.github.niefy.modules.sys.entity.SysUserEntity;
 import com.github.niefy.modules.wx.entity.WxAccount;
 import com.github.niefy.modules.wx.service.WxAccountService;
 import io.swagger.annotations.Api;
@@ -23,7 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/manage/wxAccount")
 @Api(tags = {"公众号账号-管理后台"})
-public class WxAccountManageController {
+public class WxAccountManageController extends AbstractController {
     @Autowired
     private WxAccountService wxAccountService;
 
@@ -34,9 +37,14 @@ public class WxAccountManageController {
     @RequiresPermissions("wx:wxaccount:list")
     @ApiOperation(value = "列表")
     public R list(){
-        List<WxAccount> list = wxAccountService.list();
-
+        List<WxAccount> list;
+        if (getUserId() != Constant.SUPER_ADMIN) {
+            list=wxAccountService.queryRoleAccount(getUserId());
+        }else{
+            list=wxAccountService.list();
+        }
         return R.ok().put("list", list);
+
     }
 
 
@@ -48,7 +56,6 @@ public class WxAccountManageController {
     @ApiOperation(value = "详情")
     public R info(@PathVariable("id") String appid){
 		WxAccount wxAccount = wxAccountService.getById(appid);
-
         return R.ok().put("wxAccount", wxAccount);
     }
 

@@ -3,17 +3,22 @@ package com.github.niefy.modules.sys.oauth2;
 import com.alibaba.fastjson.JSON;
 import com.github.niefy.common.utils.R;
 import com.github.niefy.common.utils.HttpContextUtils;
+import com.github.niefy.modules.sys.entity.SysUserEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -26,14 +31,13 @@ public class OAuth2Filter extends AuthenticatingFilter {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
+    protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
         //获取请求token
         String token = getRequestToken((HttpServletRequest) request);
 
         if (StringUtils.isBlank(token)) {
             return null;
         }
-
         return new OAuth2Token(token);
     }
 
@@ -50,11 +54,8 @@ public class OAuth2Filter extends AuthenticatingFilter {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
             httpResponse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin());
-
             String json = JSON.toJSONString(R.error(HttpStatus.SC_UNAUTHORIZED, "invalid token"));
-
             httpResponse.getWriter().print(json);
-
             return false;
         }
 
@@ -79,6 +80,34 @@ public class OAuth2Filter extends AuthenticatingFilter {
         }
 
         return false;
+    }
+
+    @Override
+    protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
+        String requestUrl=((HttpServletRequest) request).getRequestURI();
+        logger.info("request url--->"+requestUrl);
+        if(requestUrl.startsWith("/wx/manage")&& !requestUrl.equalsIgnoreCase("/wx/manage/wxAccount/list")){
+            Cookie[] cookies= ((HttpServletRequest) request).getCookies();
+            String appid="";
+            for(Cookie cookie:cookies){
+                if(cookie.getName().equalsIgnoreCase("appid")){
+                    appid=cookie.getValue();
+                }
+            }
+            if(StringUtils.isNotBlank(appid)){
+                SysUserEntity userEntity= (SysUserEntity) SecurityUtils.getSubject().getPrincipal();
+                if(userEntity!=null && !CollectionUtils.isEmpty(userEntity.getAppids())&& userEntity.getAppids().contains(appid)){
+                    return true;
+                }
+            }
+            response.setCharacterEncoding("UTF-8");
+            ((HttpServletResponse)response).setHeader("Content-Type", "application/json;charset=UTF-8");
+            response.setContentType("application/json;charset=UTF-8");
+            String json = JSON.toJSONString(R.error(HttpStatus.SC_FORBIDDEN, "没有授权的公众号，请联系管理员添加公众号管理权限。"));
+            response.getWriter().print(json);
+            return false;
+        }
+        return super.onLoginSuccess(token,subject,request,response);
     }
 
     /**

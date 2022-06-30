@@ -11,15 +11,18 @@ import com.github.niefy.modules.sys.entity.SysUserEntity;
 import com.github.niefy.modules.sys.form.PasswordForm;
 import com.github.niefy.modules.sys.service.SysUserRoleService;
 import com.github.niefy.modules.sys.service.SysUserService;
+import com.github.niefy.modules.wx.service.WxUserRoleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,8 @@ public class SysUserController extends AbstractController {
     private SysUserService sysUserService;
     @Autowired
     private SysUserRoleService sysUserRoleService;
+    @Autowired
+    private WxUserRoleService wxUserRoleService;
 
 
     /**
@@ -59,7 +64,10 @@ public class SysUserController extends AbstractController {
     @GetMapping("/info")
     @ApiOperation(value = "登录用户信息",notes = "")
     public R info() {
-        return R.ok().put("user", getUser());
+        SysUserEntity sysUserEntity= new SysUserEntity();
+        BeanUtils.copyProperties(getUser(),sysUserEntity);
+        sysUserEntity.setPassword(null);
+        return R.ok().put("user", sysUserEntity);
     }
 
     /**
@@ -93,11 +101,13 @@ public class SysUserController extends AbstractController {
     @ApiOperation(value = "用户信息",notes = "")
     public R info(@PathVariable("userId") Long userId) {
         SysUserEntity user = sysUserService.getById(userId);
-
+        user.setPassword(null);
         //获取用户所属的角色列表
         List<Long> roleIdList = sysUserRoleService.queryRoleIdList(userId);
         user.setRoleIdList(roleIdList);
 
+        List<Long> wxRoleIdList = wxUserRoleService.queryRoleIdList(userId);
+        user.setAppRoleIdList(wxRoleIdList);
         return R.ok().put("user", user);
     }
 

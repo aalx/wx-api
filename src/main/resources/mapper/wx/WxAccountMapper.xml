@@ -4,5 +4,13 @@
 <mapper namespace="com.github.niefy.modules.wx.dao.WxAccountMapper">
     <cache-ref namespace="com.github.niefy.modules.wx.dao.WxAccountMapper"/>
 
+    <select id="queryRoleAccount" resultType="com.github.niefy.modules.wx.entity.WxAccount">
+        select * from wx_account where appid in (
+            select appid from wx_role_account
+                where role_id in(
+                    select role_id from wx_user_role where user_id =#{uerId}
+                )
+        )
+    </select>
 
 </mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.github.niefy.modules.wx.dao.WxRoleAccountDao">
+    <cache-ref namespace="com.github.niefy.modules.wx.dao.WxRoleAccountDao"/>
+    <select id="queryAppIdList" resultType="java.lang.String">
+        select appid from wx_role_account where role_id = #{value}
+    </select>
+
+    <delete id="deleteBatch">
+        delete from wx_role_account where role_id in
+        <foreach item="roleId" collection="array" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+
+    <!-- 查询用户的所有菜单ID -->
+    <select id="queryAllAppId" resultType="java.lang.String">
+        select distinct rm.appid from wx_user_role ur
+        LEFT JOIN wx_role_account rm on ur.role_id = rm.role_id
+        where ur.user_id = #{userId}
+    </select>
+
+
+</mapper>

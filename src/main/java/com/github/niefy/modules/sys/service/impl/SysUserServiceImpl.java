@@ -12,12 +12,14 @@ import com.github.niefy.modules.sys.service.SysUserService;
 import com.github.niefy.common.exception.RRException;
 import com.github.niefy.common.utils.PageUtils;
 import com.github.niefy.common.utils.Query;
+import com.github.niefy.modules.wx.service.WxUserRoleService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -35,17 +37,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
     private SysUserRoleService sysUserRoleService;
     @Autowired
     private SysRoleService sysRoleService;
+    @Autowired
+    private WxUserRoleService wxUserRoleService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         String username = (String) params.get("username");
         Long createUserId = (Long) params.get("createUserId");
+        List<Long> uerIdList = ( List<Long>) params.get("ids");
 
         IPage<SysUserEntity> page = this.page(
             new Query<SysUserEntity>().getPage(params),
             new QueryWrapper<SysUserEntity>()
                 .like(StringUtils.isNotBlank(username), "username", username)
                 .eq(createUserId != null, "create_user_id", createUserId)
+                .in(!CollectionUtils.isEmpty(uerIdList),"user_id",uerIdList)
         );
 
         return new PageUtils(page);
@@ -76,6 +82,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
 
         //保存用户与角色关系
         sysUserRoleService.saveOrUpdate(user.getUserId(), user.getRoleIdList());
+        wxUserRoleService.saveOrUpdate(user.getUserId(),user.getAppRoleIdList());
     }
 
     @Override
@@ -93,6 +100,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
 
         //保存用户与角色关系
         sysUserRoleService.saveOrUpdate(user.getUserId(), user.getRoleIdList());
+        wxUserRoleService.saveOrUpdate(user.getUserId(),user.getAppRoleIdList());
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.github.niefy.common.utils.Query;
 import com.github.niefy.modules.wx.dao.WxAccountMapper;
 import com.github.niefy.modules.wx.entity.WxAccount;
 import com.github.niefy.modules.wx.service.WxAccountService;
+import com.google.common.collect.Lists;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.config.WxMpConfigStorage;
 import me.chanjar.weixin.mp.config.impl.WxMpDefaultConfigImpl;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -43,6 +45,14 @@ public class WxAccountServiceImpl extends ServiceImpl<WxAccountMapper, WxAccount
         );
 
         return new PageUtils(page);
+    }
+
+    @Override
+    public List<WxAccount> queryRoleAccount(Long userId) {
+        if(userId==null){
+            return Lists.newArrayList();
+        }
+        return this.getBaseMapper().queryRoleAccount(userId);
     }
 
     @PostConstruct

@@ -54,7 +54,6 @@ public class TemplateMsgLogManageController {
     @ApiOperation(value = "详情")
     public R info(@CookieValue String appid,@PathVariable("logId") Integer logId) {
         TemplateMsgLog templateMsgLog = templateMsgLogService.getById(logId);
-
         return R.ok().put("templateMsgLog", templateMsgLog);
     }
 

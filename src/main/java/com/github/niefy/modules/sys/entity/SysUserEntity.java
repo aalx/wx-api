@@ -12,6 +12,7 @@ import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 系统用户
@@ -77,5 +78,10 @@ public class SysUserEntity implements Serializable {
      * 创建时间
      */
     private Date createTime;
+
+    @TableField(exist = false)
+    private transient Set<String> appids;
+    @TableField(exist = false)
+    private transient List<Long> appRoleIdList;
 
 }
